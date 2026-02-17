@@ -55,10 +55,10 @@
     /* কিবলার তীরের বডি */
     .arrow { 
         width: 5px; 
-        height: 25%; /* বৃত্তের সাইজের ১/৪ অংশ */
+        height: 30%;
         background: #00ff7f; 
         position: absolute; 
-        top: 25%; /* সেন্টার থেকে শুরু হবে */
+        top: 20%;
         left: calc(50% - 2.5px); 
         transform-origin: bottom center; 
         z-index: 10;
@@ -144,7 +144,7 @@
             // Location Access
             navigator.geolocation.getCurrentPosition(pos => {
                 qiblaDeg = getQibla(pos.coords.latitude, pos.coords.longitude);
-                log.innerHTML = `Qibla: <b>${Math.round(qiblaDeg)}°</b> (from North)<br>ফোনটি আনুভূমিকভাবে ধরে ডানে-বামে ঘোরান।`;
+                log.innerHTML = `Qibla: <b>${Math.round(qiblaDeg)}°</b> (from North)<br>Hold phone flat and rotate to find Qibla.`;
                 btn.style.display = 'none';
             }, err => {
                 alert("Turn on location.");
@@ -166,5 +166,6 @@
     </script>
 </body>
 </html>
+
 
 
