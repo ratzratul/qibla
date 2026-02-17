@@ -3,171 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>কিবলা কম্পাস</title>
+    <title>Qibla</title>
     <style>
-        body {
-            background-color: #1a1a1a;
-            color: white;
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify_content: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-
-        /* কম্পাসের গোল বডি */
-        .compass {
-            width: 300px;
-            height: 300px;
-            border: 5px solid #fff;
-            border-radius: 50%;
-            position: relative;
-            background: radial-gradient(#333, #000);
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-            transition: transform 0.1s ease-out; /* স্মুথ রোটেশন */
-        }
-
-        /* কাবার দিকে নির্দেশকারী তীর */
-        .arrow {
-            width: 0; 
-            height: 0; 
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 100px solid #0f0; /* সবুজ রঙের তীর */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-origin: bottom center; /* নিচ থেকে ঘুরবে */
-            transform: translate(-50%, -100%); /* সেন্টারে আনা */
-        }
-
-        /* দিক নির্দেশক লেখা (N, E, S, W) */
-        .direction-label {
-            position: absolute;
-            font-weight: bold;
-            color: #888;
-        }
-        .n { top: 10px; left: 50%; transform: translateX(-50%); color: red; }
-        .s { bottom: 10px; left: 50%; transform: translateX(-50%); }
-        .e { right: 10px; top: 50%; transform: translateY(-50%); }
-        .w { left: 10px; top: 50%; transform: translateY(-50%); }
-
-        /* স্ট্যাটাস বা অনুমতি বাটন */
-        #status { margin-top: 20px; font-size: 14px; color: #ccc; }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin-top: 20px;
-            cursor: pointer;
-        }
+        body { background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .compass { width: 280px; height: 280px; border: 8px solid #444; border-radius: 50%; position: relative; background: radial-gradient(#222, #000); box-shadow: 0 0 30px rgba(0,255,127,0.1); }
+        .arrow { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 100px solid #00ff7f; position: absolute; top: 50%; left: 50%; transform-origin: bottom center; transform: translate(-50%, -100%) rotate(0deg); transition: transform 0.1s ease-out; }
+        .label { position: absolute; font-weight: bold; color: #666; font-size: 20px; }
+        .n { top: 10px; left: 50%; transform: translateX(-50%); color: #ff4444; }
+        #status { margin-top: 25px; padding: 0 20px; font-size: 14px; color: #aaa; line-height: 1.5; }
+        button { padding: 15px 30px; font-size: 18px; background: #00ff7f; color: black; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,255,127,0.3); }
+        button:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-    <h2>কিবলা ফাইন্ডার</h2>
+    <h2 style="margin-bottom: 30px;">Qibla Finder</h2>
 
-    <div class="compass" id="compassContainer">
-        <div class="direction-label n">N</div>
-        <div class="direction-label e">E</div>
-        <div class="direction-label s">S</div>
-        <div class="direction-label w">W</div>
-        
+    <div class="compass">
+        <div class="label n">N</div>
         <div class="arrow" id="qiblaArrow"></div>
     </div>
     
-    <button id="startBtn" onclick="startCompass()">কম্পাস চালু করুন</button>
-    <p id="status">লোকেশন এবং সেন্সর পারমিশন প্রয়োজন...</p>
+    <div id="controls" style="margin-top: 30px;">
+        <button onclick="initApp()">Activate Compass</button>
+    </div>
+
+    <p id="status">Allow permission</p>
 
     <script>
-        const kaabaLat = 21.422487;
-        const kaabaLng = 39.826206;
-        let qiblaHeading = 0; // কাবার দিক (Degree)
+        const kaaba = { lat: 21.422487, lng: 39.826206 };
+        let qiblaAngle = 0;
 
-        // ১. ডিগ্রি থেকে রেডিয়ান কনভার্টার
-        function toRad(deg) {
-            return deg * (Math.PI / 180);
+        function getQibla(lat, lng) {
+            const phi1 = lat * Math.PI / 180;
+            const phi2 = kaaba.lat * Math.PI / 180;
+            const delL = (kaaba.lng - lng) * Math.PI / 180;
+            const y = Math.sin(delL);
+            const x = Math.cos(phi1) * Math.tan(phi2) - Math.sin(phi1) * Math.cos(delL);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
         }
 
-        // ২. কিবলার সঠিক এঙ্গেল বের করার সূত্র (Great Circle Bearing)
-        function calculateQiblaHeading(lat, lng) {
-            const phi1 = toRad(lat);
-            const phi2 = toRad(kaabaLat);
-            const deltaLambda = toRad(kaabaLng - lng);
-
-            const y = Math.sin(deltaLambda) * Math.cos(phi2);
-            const x = Math.cos(phi1) * Math.sin(phi2) -
-                      Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+        async function initApp() {
+            const status = document.getElementById('status');
             
-            let theta = Math.atan2(y, x);
-            let bearing = (theta * 180 / Math.PI + 360) % 360; // ডিগ্রিতে রূপান্তর
-            return bearing;
+            // ১. লোকেশন নেওয়া
+            navigator.geolocation.getCurrentPosition(pos => {
+                qiblaAngle = getQibla(pos.coords.latitude, pos.coords.longitude);
+                status.innerText = "লোকেশন পাওয়া গেছে। এবার ফোনটি স্থির রাখুন।";
+                document.getElementById('controls').style.display = 'none';
+
+                // ২. কম্পাস সেন্সর অ্যাক্টিভেট করা
+                startSensor();
+            }, err => {
+                status.innerText = "লোকেশন পাওয়া যায়নি। দয়া করে GPS অন করুন।";
+            });
         }
 
-        // ৩. কম্পাস চালু করার ফাংশন
-        function startCompass() {
-            // লোকেশন নেওয়া
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    
-                    // কাবার এঙ্গেল বের করা
-                    qiblaHeading = calculateQiblaHeading(lat, lng);
-                    document.getElementById('status').innerText = `আপনার অবস্থান শনাক্ত হয়েছে। কাবা ${Math.round(qiblaHeading)}° দিকে।`;
-                    document.getElementById('startBtn').style.display = 'none';
+        function startSensor() {
+            const arrow = document.getElementById('qiblaArrow');
+            const status = document.getElementById('status');
 
-                    // সেন্সর চালু করা (iOS 13+ এর জন্য রিকোয়েস্ট পারমিশন)
-                    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                        DeviceOrientationEvent.requestPermission()
-                            .then(response => {
-                                if (response == 'granted') {
-                                    window.addEventListener('deviceorientation', handleOrientation);
-                                }
-                            })
-                            .catch(console.error);
-                    } else {
-                        // Android এবং সাধারণ ব্রাউজারের জন্য
-                        window.addEventListener('deviceorientationabsolute', handleOrientation) || window.addEventListener('deviceorientation', handleOrientation);
+            // iOS (iPhone) এর জন্য বিশেষ পারমিশন
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(res => {
+                    if (res === 'granted') {
+                        window.addEventListener('deviceorientation', (e) => updateCompass(e, arrow));
                     }
-
-                }, error => {
-                    document.getElementById('status').innerText = "লোকেশন অন করুন এবং আবার চেষ্টা করুন।";
-                });
+                }).catch(err => status.innerText = "সেন্সর পারমিশন রিজেক্ট করা হয়েছে।");
             } else {
-                document.getElementById('status').innerText = "আপনার ব্রাউজার জিওলোকেশন সাপোর্ট করে না।";
+                // Android বা অন্যান্য ব্রাউজার
+                window.addEventListener('deviceorientationabsolute', (e) => updateCompass(e, arrow), true);
+                // যদি absolute না থাকে তবে সাধারণটা ট্রাই করবে
+                window.addEventListener('deviceorientation', (e) => {
+                    if (!e.absolute && !e.webkitCompassHeading) return;
+                    updateCompass(e, arrow);
+                }, true);
             }
         }
 
-        // ৪. ফোন ঘোরালে তীরের দিক ঠিক রাখার লজিক
-        function handleOrientation(event) {
-            let compass = 0;
+        function updateCompass(event, arrow) {
+            let heading = 0;
 
-            // ফোনের দিক (Alpha) নির্ণয়
             if (event.webkitCompassHeading) {
                 // iOS এর জন্য
-                compass = event.webkitCompassHeading;
-            } else {
-                // Android এর জন্য (alpha উল্টো কাজ করে তাই ৩৬০ থেকে বিয়োগ)
-                compass = 360 - event.alpha;
+                heading = event.webkitCompassHeading;
+            } else if (event.alpha !== null) {
+                // Android এর জন্য (এটি মূলত উল্টো ভ্যালু দেয় তাই ঠিক করে নেওয়া)
+                heading = 360 - event.alpha;
             }
 
-            // লজিক: আমরা চাই তীর সব সময় কাবার দিকে থাকুক।
-            // কাবার দিক (qiblaHeading) - ফোনের বর্তমান দিক (compass)
-            // উদাহরণ: কাবা ২৭০ ডিগ্রিতে। ফোন উত্তর দিকে (০ ডিগ্রি)। তীর ২৭০-০ = ২৭০ এ ঘুরবে।
-            // ফোন ঘুরিয়ে ৯০ ডিগ্রিতে নিলে, তীর ২৭০-৯০ = ১৮০ তে দেখাবে। মানে তীর ফিক্সড থাকবে কাবার দিকে।
+            // কিবলার এঙ্গেল থেকে ফোনের মুখ বিয়োগ করলে তীর সবসময় কাবার দিকে থাকবে
+            const finalRotation = qiblaAngle - heading;
+            arrow.style.transform = `translate(-50%, -100%) rotate(${finalRotation}deg)`;
             
-            const arrowElement = document.getElementById('qiblaArrow');
-            const rotation = qiblaHeading - compass; 
-            
-            // CSS দিয়ে তীর ঘোরানো
-            arrowElement.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
+            document.getElementById('status').innerText = `কাবা: ${Math.round(qiblaAngle)}° | ফোন মুখ করে আছে: ${Math.round(heading)}°`;
         }
     </script>
 </body>
