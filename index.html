@@ -5,61 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Qibla</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕋</text></svg>">
-    <style>
-        body { background: #1a1a1a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        
-        .compass { 
-            width: 280px; 
-            height: 280px; 
-            border: 8px solid #333; 
-            border-radius: 50%; 
-            position: relative; 
-            margin-bottom: 20px; 
-            background: radial-gradient(#222, #111);
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-        }
+<style>
+    body { 
+        background: #1a1a1a; 
+        color: white; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+        height: 100vh; 
+        margin: 0; 
+        overflow: hidden;
+    }
+    
+    .header-section { text-align: center; margin-bottom: 5vh; }
+    .tagline { color: #888; font-style: italic; font-size: 14px; margin-top: 5px; }
 
-        /* দিক নির্দেশক লেখাগুলো */
-        .label {
-            position: absolute;
-            font-weight: bold;
-            font-size: 18px;
-            color: #888;
-            width: 30px;
-            text-align: center;
-        }
-        .n { top: 10px; left: calc(50% - 15px); color: #ff4444; } /* উত্তর লাল রঙ */
-        .s { bottom: 10px; left: calc(50% - 15px); }
-        .e { right: 10px; top: calc(50% - 10px); }
-        .w { left: 10px; top: calc(50% - 10px); }
+    /* কম্পাস - স্ক্রিনের ৮০% চওড়া কিন্তু সর্বোচ্চ ৩৫০ পিক্সেল */
+    .compass { 
+        width: 80vw; 
+        height: 80vw; 
+        max-width: 350px; 
+        max-height: 350px;
+        border: 8px solid #333; 
+        border-radius: 50%; 
+        position: relative; 
+        background: radial-gradient(#222, #111);
+        box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
 
-        /* কিবলার জন্য সবুজ দাগ */
-        .arrow { 
-            width: 6px; 
-            height: 110px; 
-            background: #00ff7f; 
-            position: absolute; 
-            top: 30px; 
-            left: calc(50% - 3px); 
-            transform-origin: bottom center; 
-            z-index: 10;
-            border-radius: 5px;
-            transition: transform 0.2s ease-out; /* কাঁটা নড়া স্মুথ করবে */
-        }
-        /* তীরের মাথা */
-        .arrow::before { 
-            content: ''; 
-            position: absolute; 
-            top: -12px; 
-            left: -7px; 
-            border-left: 10px solid transparent; 
-            border-right: 10px solid transparent; 
-            border-bottom: 18px solid #00ff7f; 
-        }
+    /* দিক নির্দেশক লেখাগুলো */
+    .label {
+        position: absolute;
+        font-weight: bold;
+        font-size: 5vw; /* রেসপন্সিভ টেক্সট */
+        color: #888;
+        width: 30px;
+        text-align: center;
+    }
+    /* বড় স্ক্রিনের জন্য টেক্সট সাইজ ফিক্সড করা */
+    @media (min-width: 500px) { .label { font-size: 22px; } }
 
-        button { padding: 15px 30px; font-size: 18px; background: #00ff7f; color: black; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,255,127,0.3); }
-        #log { font-size: 14px; color: #aaa; margin-top: 15px; text-align: center; max-width: 80%; }
-    </style>
+    .n { top: 15px; left: calc(50% - 15px); color: #ff4444; }
+    .s { bottom: 15px; left: calc(50% - 15px); }
+    .e { right: 15px; top: calc(50% - 11px); }
+    .w { left: 15px; top: calc(50% - 11px); }
+
+    /* কিবলার তীরের বডি */
+    .arrow { 
+        width: 5px; 
+        height: 80%; /* বৃত্তের সাইজের ১/৪ অংশ */
+        background: #00ff7f; 
+        position: absolute; 
+        top: 25%; /* সেন্টার থেকে শুরু হবে */
+        left: calc(50% - 2.5px); 
+        transform-origin: bottom center; 
+        z-index: 10;
+        border-radius: 5px;
+    }
+
+    /* তীরের মাথা (ত্রিভুজ অংশ) */
+    .arrow::before { 
+        content: ''; 
+        position: absolute; 
+        top: -15px; /* বডির ঠিক উপরে */
+        left: -7.5px; 
+        border-left: 10px solid transparent; 
+        border-right: 10px solid transparent; 
+        border-bottom: 20px solid #00ff7f; 
+    }
+
+    button { 
+        padding: 15px 35px; 
+        font-size: 18px; 
+        background: #00ff7f; 
+        color: black; 
+        border: none; 
+        border-radius: 50px; 
+        cursor: pointer; 
+        font-weight: bold; 
+        margin-top: 30px;
+        box-shadow: 0 4px 15px rgba(0,255,127,0.3); 
+    }
+    
+    #log { font-size: 14px; color: #aaa; margin-top: 15px; text-align: center; max-width: 80%; }
+</style>
 </head>
 <body>
 
@@ -135,3 +166,4 @@
     </script>
 </body>
 </html>
+
