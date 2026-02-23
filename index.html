@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -22,7 +22,7 @@
     .header-section { text-align: center; margin-bottom: 5vh; }
     .tagline { color: #888; font-style: italic; font-size: 14px; margin-top: 5px; }
 
-    /* কম্পাস - স্ক্রিনের ৮০% চওড়া কিন্তু সর্বোচ্চ ৩৫০ পিক্সেল */
+    /* Compass Background */
     .compass { 
         width: 80vw; 
         height: 80vw; 
@@ -35,16 +35,40 @@
         box-shadow: 0 0 30px rgba(0,0,0,0.5);
     }
 
-    /* দিক নির্দেশক লেখাগুলো */
+    /* Dial wrapper that will rotate */
+    .dial {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+    }
+
+    /* Subtle degree ticks on the edge */
+    .ticks {
+        position: absolute;
+        width: 100%; 
+        height: 100%;
+        border-radius: 50%;
+        background: repeating-conic-gradient(
+            from -0.5deg,
+            rgba(255, 255, 255, 0.15) 0deg 1deg,
+            transparent 1deg 5deg
+        );
+        /* Masks the center so ticks only appear on the outer edge */
+        -webkit-mask-image: radial-gradient(transparent 82%, black 83%);
+        mask-image: radial-gradient(transparent 82%, black 83%);
+    }
+
+    /* Direction labels */
     .label {
         position: absolute;
         font-weight: bold;
-        font-size: 5vw; /* রেসপন্সিভ টেক্সট */
+        font-size: 5vw; 
         color: #888;
         width: 30px;
         text-align: center;
+        z-index: 2;
     }
-    /* বড় স্ক্রিনের জন্য টেক্সট সাইজ ফিক্সড করা */
     @media (min-width: 500px) { .label { font-size: 22px; } }
 
     .n { top: 15px; left: calc(50% - 15px); color: #ff4444; }
@@ -52,7 +76,7 @@
     .e { right: 15px; top: calc(50% - 11px); }
     .w { left: 15px; top: calc(50% - 11px); }
 
-    /* কিবলার তীরের বডি */
+    /* Qibla Needle Body */
     .arrow { 
         width: 5px; 
         height: 30%;
@@ -65,11 +89,11 @@
         border-radius: 5px;
     }
 
-    /* তীরের মাথা (ত্রিভুজ অংশ) */
+    /* Qibla Needle Head */
     .arrow::before { 
         content: ''; 
         position: absolute; 
-        top: -15px; /* বডির ঠিক উপরে */
+        top: -15px; 
         left: -7.5px; 
         border-left: 10px solid transparent; 
         border-right: 10px solid transparent; 
@@ -89,7 +113,14 @@
         box-shadow: 0 4px 15px rgba(0,255,127,0.3); 
     }
     
-    #log { font-size: 14px; color: #aaa; margin-top: 15px; text-align: center; max-width: 80%; }
+    #log { 
+        font-size: 14px; 
+        color: #aaa; 
+        margin-top: 15px; 
+        text-align: center; 
+        max-width: 85%; 
+        line-height: 1.5;
+    }
 </style>
 </head>
 <body>
@@ -97,16 +128,24 @@
     <h2 style="color: #00ff7f; margin-bottom: 20px;">Qibla Finder</h2>
 
     <div class="compass">
-        <div class="label n">N</div>
-        <div class="label e">E</div>
-        <div class="label s">S</div>
-        <div class="label w">W</div>
+        <div id="dial" class="dial">
+            <div class="ticks"></div>
+            <div class="label n">N</div>
+            <div class="label e">E</div>
+            <div class="label s">S</div>
+            <div class="label w">W</div>
+        </div>
         
         <div id="needle" class="arrow"></div>
     </div>
 
     <button id="btn">Activate Compass</button>
-    <div id="log">Qibla will be shown according your location</div>
+    <div id="log">
+        Qibla will be shown according to your location.<br>
+        <span style="font-size: 11px; color: #777; display: block; margin-top: 8px;">
+            Privacy Note: We do not track or save your location. All calculations are securely performed on your device.
+        </span>
+    </div>
 
     <script>
         const kaaba = { lat: 21.422487, lng: 39.826206 };
@@ -114,6 +153,7 @@
         const btn = document.getElementById('btn');
         const log = document.getElementById('log');
         const needle = document.getElementById('needle');
+        const dial = document.getElementById('dial'); // Getting the dial element
 
         function getQibla(lat, lng) {
             const phi1 = lat * Math.PI / 180;
@@ -155,7 +195,10 @@
             const handler = (e) => {
                 let heading = e.webkitCompassHeading || (360 - e.alpha);
                 if (heading) {
-                    // কিবলা ক্যালকুলেশন
+                    // Rotate the dial to always point 'N' to the real North
+                    dial.style.transform = `rotate(${-heading}deg)`;
+                    
+                    // Rotate the needle to point to Qibla
                     let rotate = qiblaDeg - heading;
                     needle.style.transform = `rotate(${rotate}deg)`;
                 }
@@ -166,6 +209,3 @@
     </script>
 </body>
 </html>
-
-
-
